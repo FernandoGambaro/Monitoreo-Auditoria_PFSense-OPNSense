@@ -4,7 +4,7 @@ namespace App;
 
 class Encryption
 {
-    var $skey = '1324657981324657';  // you can change it
+    var $skey = '12345671233456212';  // you can change it
 
     const METHOD = 'AES-256-CBC';
 
@@ -17,7 +17,7 @@ class Encryption
     /**
      * Default secret key
      */
-    const KEY = '201707eggplant99';  // 16 bits
+    const KEY = 'TuFavorita2323232399';  // 16 bits
 
     /**
      * MÉTODOS PARA CONTRASEÑAS (IRREVERSIBLES)
