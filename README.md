@@ -2,7 +2,7 @@
 
 Plataforma web en PHP y MariaDB/MySQL diseñada para **visualizar gráficamente los registros del firewall distinguiendo tráfico entrante y saliente**, **inspeccionar direcciones IP y puertos bloqueados**, y **seleccionar puertos de especial interés** para vigilar servicios internos o expuestos de la red.
 
-Incluye además soporte multi-motor para análisis asistido con IA (modelo local en red propia vía Ollama y/o Google Gemini), importación programada mediante `cron`, mantenimiento de base de datos por lotes, alertas de seguridad y consultas de reputación de IP (VirusTotal / AbuseIPDB).
+Incluye además soporte multi-motor para análisis asistido con IA (modelo local en red propia vía Ollama y/o Google Gemini), importación programada mediante `cron`, resolución geográfica de IPs con base de datos MaxMind (`GeoLite2-Country.mmdb`), mantenimiento de base de datos por lotes, alertas de seguridad y consultas de reputación de IP (VirusTotal / AbuseIPDB).
 
 ---
 
@@ -12,10 +12,11 @@ Incluye además soporte multi-motor para análisis asistido con IA (modelo local
 2. [Requisitos del Sistema](#requisitos-del-sistema)
 3. [Instalación y Despliegue](#instalación-y-despliegue)
    - [1. Clonado y Configuración de Base de Datos](#1-clonado-y-configuración-de-base-de-datos)
-   - [2. Variables de Entorno (.env)](#2-variables-de-entorno-env)
-   - [3. Despliegue en Linux con Apache2](#3-despliegue-en-linux-con-apache2)
-   - [4. Despliegue en Linux con Nginx + PHP-FPM](#4-despliegue-en-linux-con-nginx--php-fpm)
-   - [5. Despliegue en Windows con WAMP](#5-despliegue-en-windows-con-wamp)
+   - [2. Base de Datos Geográfica MaxMind (`GeoLite2-Country.mmdb`)](#2-base-de-datos-geográfica-maxmind-geolite2-countrymmdb)
+   - [3. Variables de Entorno (.env)](#3-variables-de-entorno-env)
+   - [4. Despliegue en Linux con Apache2](#4-despliegue-en-linux-con-apache2)
+   - [5. Despliegue en Linux con Nginx + PHP-FPM](#5-despliegue-en-linux-con-nginx--php-fpm)
+   - [6. Despliegue en Windows con WAMP](#6-despliegue-en-windows-con-wamp)
 4. [Configuración de los Firewalls](#configuración-de-los-firewalls)
    - [Configuración en pfSense](#configuración-en-pfsense)
    - [Configuración en OPNsense](#configuración-en-opnsense)
@@ -34,6 +35,7 @@ Incluye además soporte multi-motor para análisis asistido con IA (modelo local
 * **Visualización Gráfica de Logs:** Gráficos interactivos y vistas tabulares paginadas (*server-side*) que diferencian claramente el tráfico **entrante** y **saliente**, facilitando la lectura rápida del comportamiento de la red.
 * **Inspección de Bloqueos (IPs y Puertos):** Revisión detallada de conexiones bloqueadas (`BLOCK`) para auditar direcciones IP de origen/destino, frecuencia de intentos, países y puertos afectados, con enlaces directos a VirusTotal y AbuseIPDB.
 * **Puertos de Especial Interés:** Selección y seguimiento focalizado de puertos críticos o relevantes (asociados a servicios internos, administración remota, bases de datos, correo, web, etc.) para detectar intentos de acceso o anomalías hacia servicios de la red.
+* **Resolución de País con MaxMind:** Identificación geográfica de direcciones IP externas utilizando el archivo `GeoLite2-Country.mmdb` obtenido desde MaxMind.
 * **Soporte Multi-Firewall:** Gestión centralizada de múltiples instancias de **pfSense** y **OPNsense** desde un único panel.
 * **Evaluación Híbrida con IA (Local + Cloud):** Integración nativa con **Ollama** (modelos locales en red propia como `deepseek-coder-v2`, `llama3`, `qwen2.5`) y **Google Gemini** (`gemini-2.5-flash`), con soporte de *fallback* automático y gestión de listas blancas (*Whitelist*).
 * **Mantenimiento de Base de Datos:** Herramienta integrada en *Administración → Mantenimiento BD* para depuración segura de registros históricos por lotes (`LIMIT 25000` vía AJAX) y actualización de estadísticas de índices.
@@ -45,6 +47,7 @@ Incluye además soporte multi-motor para análisis asistido con IA (modelo local
 * **PHP:** 8.1 o superior.
 * **Extensiones PHP requeridas:** `pdo`, `pdo_mysql`, `curl`, `json`, `mbstring`, `intl`, `openssl`.
 * **Base de Datos:** MariaDB 10.6+ o MySQL 8.0+ (con soporte `utf8mb4_unicode_ci`).
+* **Geolocalización IP:** Archivo `GeoLite2-Country.mmdb` descargado desde MaxMind.
 * **Servidor Web:** Apache 2.4+, Nginx 1.18+ o WAMP Server (Windows).
 * **Firewalls Soportados:** pfSense y/o OPNsense con envío de logs por Syslog o acceso API/SSH configurado.
 * **Opcional (IA):** Servidor Ollama accesible en la red local (`puerto 11434`) y/o API Key de Google Gemini.
@@ -59,7 +62,7 @@ Clona el repositorio en el directorio raíz de tu servidor web:
 
 ```bash
 git clone https://github.com/FernandoGambaro/Monitoreo-Auditoria_PFSense-OPNSense.git
-cd Monitoreo-Auditoria_PFSense-OPNSense
+cd firewall-monitor
 ```
 
 Crea la base de datos y el usuario dedicado en MariaDB/MySQL:
@@ -77,7 +80,24 @@ Importa el esquema inicial de tablas (si dispones del archivo `.sql` en `/databa
 mysql -u fw_monitor -p firewall_logs < database/schema.sql
 ```
 
-### 2. Variables de Entorno (`.env`)
+### 2. Base de Datos Geográfica MaxMind (`GeoLite2-Country.mmdb`)
+
+El archivo `GeoLite2-Country.mmdb` **no se incluye** en el repositorio y debe obtenerse directamente desde **MaxMind**:
+
+1. Crea una cuenta gratuita en [MaxMind](https://www.maxmind.com/) y genera una clave de licencia (*License Key*) en tu panel de usuario.
+2. Descarga el paquete **GeoLite2 Country** (en formato `.mmdb` / `.tar.gz`) desde tu cuenta de MaxMind o mediante `geoipupdate`.
+3. Extrae el archivo `GeoLite2-Country.mmdb` y colócalo en la carpeta de datos/geo del proyecto (por ejemplo `geoip/GeoLite2-Country.mmdb` o `storage/GeoLite2-Country.mmdb`, según la ruta configurada en tu aplicación).
+4. Asegúrate de que el archivo tenga permisos de lectura para el usuario del servidor web y de `cron`:
+   ```bash
+   sudo chmod 644 /ruta/al/firewall/geoip/GeoLite2-Country.mmdb
+   ```
+5. Si utilizas **SELinux**, asigna el contexto adecuado al directorio o archivo `.mmdb`:
+   ```bash
+   sudo semanage fcontext -a -t httpd_sys_content_t "/ruta/al/firewall/geoip(/.*)?"
+   sudo restorecon -Rv /ruta/al/firewall/geoip
+   ```
+
+### 3. Variables de Entorno (`.env`)
 
 Crea un archivo `.env` en la raíz del proyecto con la siguiente configuración:
 
@@ -110,7 +130,7 @@ GEMINI_MODEL=gemini-2.5-flash//o el modelo que elijas
 
 ---
 
-### 3. Despliegue en Linux con Apache2
+### 4. Despliegue en Linux con Apache2
 
 1. **Instalar paquetes necesarios (Debian/Ubuntu):**
    ```bash
@@ -160,7 +180,7 @@ GEMINI_MODEL=gemini-2.5-flash//o el modelo que elijas
 
 ---
 
-### 4. Despliegue en Linux con Nginx + PHP-FPM
+### 5. Despliegue en Linux con Nginx + PHP-FPM
 
 1. **Instalar Nginx y PHP-FPM:**
    ```bash
@@ -211,7 +231,7 @@ GEMINI_MODEL=gemini-2.5-flash//o el modelo que elijas
 
 ---
 
-### 5. Despliegue en Windows con WAMP
+### 6. Despliegue en Windows con WAMP
 
 1. **Instalar WampServer:** Descarga e instala WampServer 3.3+ (64-bit) con PHP 8.1+ y MariaDB/MySQL.
 2. **Copiar proyecto:** Extrae la carpeta del proyecto dentro de `C:\wamp64\www\firewall-monitor`.
