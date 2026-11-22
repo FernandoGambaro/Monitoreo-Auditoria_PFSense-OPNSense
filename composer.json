@@ -1,0 +1,11 @@
+{
+    "require": {
+        "phpoffice/phpspreadsheet": "^2.0",
+        "phpseclib/phpseclib": "^4.0",
+        "geoip2/geoip2": "^3.4",
+        "phpoffice/phpword": "^1.4",
+        "phenx/php-svg-lib": "^1.0",
+        "dompdf/dompdf": "^3.1",
+        "phpmailer/phpmailer": "^7.2"
+    }
+}
