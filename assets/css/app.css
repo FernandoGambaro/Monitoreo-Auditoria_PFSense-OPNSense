@@ -1,0 +1,30 @@
+body {
+    background: #f4f6f9;
+}
+
+.card {
+    border: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+.stat-card {
+    text-align: center;
+    padding: 20px;
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.badge-risk-high {
+    background-color: #dc3545;
+}
+
+.badge-risk-medium {
+    background-color: #ffc107;
+}
+
+.badge-risk-low {
+    background-color: #28a745;
+}
