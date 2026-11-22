@@ -114,7 +114,7 @@ DB_CHARSET=utf8mb4
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_USER=avisofirewall@gmail.com
-SMTP_PASS=UnaMuyseguraPorFavor
+SMTP_PASS=UnaMuySeguraPorFavor
 ALERT_EMAIL_DESTINO=mimail@gmail.com //Cambiar por tu email
 
 # Configuración de Inteligencia Artificial (Opcional)
