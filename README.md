@@ -62,7 +62,7 @@ Clona el repositorio en el directorio raíz de tu servidor web:
 
 ```bash
 git clone https://github.com/FernandoGambaro/Monitoreo-Auditoria_PFSense-OPNSense.git
-cd firewall-monitor
+cd Monitoreo-Auditoria_PFSense-OPNSense
 ```
 
 Crea la base de datos y el usuario dedicado en MariaDB/MySQL:
