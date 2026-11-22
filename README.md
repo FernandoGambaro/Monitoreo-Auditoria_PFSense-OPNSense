@@ -110,6 +110,13 @@ DB_USER=fw_monitor
 DB_PASS=TuPasswordSegura
 DB_CHARSET=utf8mb4
 
+# Configuración del Servidor de Correo (SMTP)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USER=avisofirewall@gmail.com
+SMTP_PASS=UnaMuyseguraPorFavor
+ALERT_EMAIL_DESTINO=mimail@gmail.com //Cambiar por tu email
+
 # Configuración de Inteligencia Artificial (Opcional)
 # Proveedor por defecto: 'local' (Ollama en red propia) o 'gemini' (Google Cloud)
 IA_PROVEEDOR_DEFAULT=local
